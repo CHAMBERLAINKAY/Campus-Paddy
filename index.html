@@ -1,0 +1,337 @@
+import React, { useState, useEffect } from 'react';
+‎import { 
+‎  Home, BookOpen, Calculator, User, 
+‎  Bell, ChevronRight, Lock, Download, 
+‎  Plus, Trash2, CheckCircle, CreditCard 
+‎} from 'lucide-react';
+‎import { motion, AnimatePresence } from 'framer-motion';
+‎
+‎// --- Mock Data ---
+‎const PAST_QUESTIONS = [
+‎  { id: 1, code: 'CSC 301', title: 'Data Structures', level: 300, dept: 'Computer Science', premium: false, tag: 'Repeated' },
+‎  { id: 2, code: 'MTH 101', title: 'General Mathematics I', level: 100, dept: 'Engineering', premium: false, tag: 'Important' },
+‎  { id: 3, code: 'CSC 402', title: 'Artificial Intelligence', level: 400, dept: 'Computer Science', premium: true, tag: 'New' },
+‎  { id: 4, code: 'GST 111', title: 'Communication in English', level: 100, dept: 'General Studies', premium: false, tag: null },
+‎  { id: 5, code: 'PHY 102', title: 'General Physics II', level: 100, dept: 'Physics', premium: true, tag: 'Important' },
+‎];
+‎
+‎const GRADE_POINTS = { 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1, 'F': 0 };
+‎
+‎const App = () => {
+‎  const [activeTab, setActiveTab] = useState('home');
+‎  const [user, setUser] = useState({ name: 'Kingsley', dept: 'Computer Science', level: '300L', isPremium: false });
+‎  const [notifications] = useState([
+‎    { id: 1, text: 'Exam timetable for 300L is out!', time: '2h ago' },
+‎    { id: 2, text: 'New Past Question added: CSC 301', time: '5h ago' },
+‎  ]);
+‎
+‎  // View Switcher
+‎  const renderView = () => {
+‎    switch (activeTab) {
+‎      case 'home': return <HomeView user={user} notifications={notifications} setTab={setActiveTab} />;
+‎      case 'pq': return <PastQuestionsView isPremium={user.isPremium} />;
+‎      case 'cgpa': return <CGPACalculator />;
+‎      case 'profile': return <ProfileView user={user} setUser={setUser} />;
+‎      default: return <HomeView />;
+‎    }
+‎  };
+‎
+‎  return (
+‎    <div className="min-h-screen bg-gray-50 pb-24 font-sans text-slate-900 max-w-md mx-auto shadow-2xl relative overflow-hidden">
+‎      {/* Header */}
+‎      <header className="p-6 bg-white flex justify-between items-center sticky top-0 z-10 border-b border-gray-100">
+‎        <div>
+‎          <h1 className="text-2xl font-bold text-indigo-600">CampusPal</h1>
+‎        </div>
+‎        <div className="relative">
+‎          <Bell size={24} className="text-gray-400" />
+‎          <span className="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full border-2 border-white"></span>
+‎        </div>
+‎      </header>
+‎
+‎      {/* Main Content */}
+‎      <main className="px-6 py-4">
+‎        <AnimatePresence mode="wait">
+‎          <motion.div
+‎            key={activeTab}
+‎            initial={{ opacity: 0, y: 10 }}
+‎            animate={{ opacity: 1, y: 0 }}
+‎            exit={{ opacity: 0, y: -10 }}
+‎            transition={{ duration: 0.2 }}
+‎          >
+‎            {renderView()}
+‎          </motion.div>
+‎        </AnimatePresence>
+‎      </main>
+‎
+‎      {/* Bottom Navigation */}
+‎      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t border-gray-100 px-8 py-4 flex justify-between items-center z-20">
+‎        <NavIcon active={activeTab === 'home'} icon={<Home />} label="Home" onClick={() => setActiveTab('home')} />
+‎        <NavIcon active={activeTab === 'pq'} icon={<BookOpen />} label="Library" onClick={() => setActiveTab('pq')} />
+‎        <NavIcon active={activeTab === 'cgpa'} icon={<Calculator />} label="CGPA" onClick={() => setActiveTab('cgpa')} />
+‎        <NavIcon active={activeTab === 'profile'} icon={<User />} label="Profile" onClick={() => setActiveTab('profile')} />
+‎      </nav>
+‎    </div>
+‎  );
+‎};
+‎
+‎// --- Sub-Components ---
+‎
+‎const NavIcon = ({ active, icon, label, onClick }) => (
+‎  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-colors ${active ? 'text-indigo-600' : 'text-gray-400'}`}>
+‎    {React.cloneElement(icon, { size: 24, strokeWidth: active ? 2.5 : 2 })}
+‎    <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
+‎  </button>
+‎);
+‎
+‎const HomeView = ({ user, notifications, setTab }) => (
+‎  <div className="space-y-6">
+‎    <section>
+‎      <h2 className="text-xl font-bold">Welcome back, {user.name} 👋</h2>
+‎      <p className="text-gray-500 text-sm">{user.dept} • {user.level}</p>
+‎    </section>
+‎
+‎    {/* Quick Access Grid */}
+‎    <div className="grid grid-cols-2 gap-4">
+‎      <div onClick={() => setTab('pq')} className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 cursor-pointer">
+‎        <div className="bg-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3">
+‎          <BookOpen size={20} />
+‎        </div>
+‎        <h3 className="font-semibold">Past Questions</h3>
+‎        <p className="text-xs text-indigo-400 mt-1">120+ Materials</p>
+‎      </div>
+‎      <div onClick={() => setTab('cgpa')} className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 cursor-pointer">
+‎        <div className="bg-emerald-600 w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3">
+‎          <Calculator size={20} />
+‎        </div>
+‎        <h3 className="font-semibold">CGPA Calc</h3>
+‎        <p className="text-xs text-emerald-400 mt-1">Track Progress</p>
+‎      </div>
+‎    </div>
+‎
+‎    {/* Featured/Updates */}
+‎    <section className="bg-gradient-to-br from-indigo-600 to-violet-700 p-5 rounded-3xl text-white shadow-lg relative overflow-hidden">
+‎      <div className="relative z-10">
+‎        <h3 className="font-bold text-lg mb-1">Study Planner</h3>
+‎        <p className="text-indigo-100 text-sm mb-4">Organize your exam prep with our smart calendar.</p>
+‎        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase">Coming Soon</span>
+‎      </div>
+‎      <div className="absolute -right-4 -bottom-4 opacity-20 transform rotate-12">
+‎        <BookOpen size={100} />
+‎      </div>
+‎    </section>
+‎
+‎    {/* Notifications */}
+‎    <section>
+‎      <h3 className="font-bold mb-3 flex items-center gap-2">
+‎        Updates <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full">New</span>
+‎      </h3>
+‎      <div className="space-y-3">
+‎        {notifications.map(n => (
+‎          <div key={n.id} className="bg-white p-4 rounded-2xl flex items-start gap-4 shadow-sm border border-gray-50">
+‎            <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Bell size={18} /></div>
+‎            <div>
+‎              <p className="text-sm font-medium">{n.text}</p>
+‎              <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+‎            </div>
+‎          </div>
+‎        ))}
+‎      </div>
+‎    </section>
+‎  </div>
+‎);
+‎
+‎const PastQuestionsView = ({ isPremium }) => {
+‎  const [filter, setFilter] = useState('');
+‎  
+‎  return (
+‎    <div className="space-y-4">
+‎      <div className="flex items-center justify-between">
+‎        <h2 className="text-xl font-bold text-slate-800">Study Materials</h2>
+‎        {!isPremium && (
+‎          <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-lg">FREE ACCOUNT</span>
+‎        )}
+‎      </div>
+‎
+‎      {/* Filters */}
+‎      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+‎        {['All', '100L', '200L', '300L', '400L'].map(lvl => (
+‎          <button key={lvl} onClick={() => setFilter(lvl)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${filter === lvl ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200'}`}>
+‎            {lvl}
+‎          </button>
+‎        ))}
+‎      </div>
+‎
+‎      {/* List */}
+‎      <div className="space-y-3">
+‎        {PAST_QUESTIONS.map(item => (
+‎          <div key={item.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+‎            <div className="flex items-center gap-4">
+‎              <div className={`p-3 rounded-xl ${item.premium ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-indigo-600'}`}>
+‎                {item.premium ? <Lock size={20} /> : <BookOpen size={20} />}
+‎              </div>
+‎              <div>
+‎                <h4 className="font-bold text-sm">{item.code}: {item.title}</h4>
+‎                <div className="flex gap-2 mt-1">
+‎                  <span className="text-[10px] text-gray-400">{item.dept}</span>
+‎                  {item.tag && <span className="text-[10px] font-bold text-indigo-500 uppercase">{item.tag}</span>}
+‎                </div>
+‎              </div>
+‎            </div>
+‎            <button className={`${item.premium && !isPremium ? 'text-gray-300' : 'text-indigo-600'}`}>
+‎              <Download size={20} />
+‎            </button>
+‎          </div>
+‎        ))}
+‎      </div>
+‎
+‎      {!isPremium && (
+‎        <div className="bg-indigo-900 p-6 rounded-3xl text-white mt-8 shadow-xl">
+‎          <h3 className="font-bold text-lg mb-2">Unlock Premium Access</h3>
+‎          <p className="text-indigo-200 text-xs mb-4">Get access to 400L questions, expert solutions, and offline downloads.</p>
+‎          <button className="w-full bg-white text-indigo-900 font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+‎            <CreditCard size={18} /> Upgrade Now - ₦2,000
+‎          </button>
+‎        </div>
+‎      )}
+‎    </div>
+‎  );
+‎};
+‎
+‎const CGPACalculator = () => {
+‎  const [courses, setCourses] = useState([{ name: '', units: '', grade: 'A' }]);
+‎  const [gpa, setGpa] = useState(null);
+‎
+‎  const addCourse = () => setCourses([...courses, { name: '', units: '', grade: 'A' }]);
+‎  
+‎  const removeCourse = (index) => {
+‎    const newCourses = courses.filter((_, i) => i !== index);
+‎    setCourses(newCourses);
+‎  };
+‎
+‎  const updateCourse = (index, field, value) => {
+‎    const newCourses = [...courses];
+‎    newCourses[index][field] = value;
+‎    setCourses(newCourses);
+‎  };
+‎
+‎  const calculate = () => {
+‎    let totalPoints = 0;
+‎    let totalUnits = 0;
+‎    courses.forEach(c => {
+‎      const u = parseFloat(c.units) || 0;
+‎      totalUnits += u;
+‎      totalPoints += (u * GRADE_POINTS[c.grade]);
+‎    });
+‎    setGpa(totalUnits > 0 ? (totalPoints / totalUnits).toFixed(2) : 0);
+‎  };
+‎
+‎  return (
+‎    <div className="space-y-6">
+‎      <h2 className="text-xl font-bold">GPA Calculator</h2>
+‎      
+‎      <div className="space-y-4">
+‎        {courses.map((c, i) => (
+‎          <div key={i} className="flex gap-2 items-end bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+‎            <div className="flex-1">
+‎              <label className="text-[10px] text-gray-400 font-bold uppercase ml-1">Course</label>
+‎              <input 
+‎                placeholder="e.g. CSC301" 
+‎                className="w-full bg-gray-50 border-none rounded-lg text-sm p-2 focus:ring-2 ring-indigo-500"
+‎                value={c.name}
+‎                onChange={(e) => updateCourse(i, 'name', e.target.value)}
+‎              />
+‎            </div>
+‎            <div className="w-16">
+‎              <label className="text-[10px] text-gray-400 font-bold uppercase ml-1">Units</label>
+‎              <input 
+‎                type="number" 
+‎                placeholder="0" 
+‎                className="w-full bg-gray-50 border-none rounded-lg text-sm p-2"
+‎                value={c.units}
+‎                onChange={(e) => updateCourse(i, 'units', e.target.value)}
+‎              />
+‎            </div>
+‎            <div className="w-16">
+‎              <label className="text-[10px] text-gray-400 font-bold uppercase ml-1">Grade</label>
+‎              <select 
+‎                className="w-full bg-gray-50 border-none rounded-lg text-sm p-2"
+‎                value={c.grade}
+‎                onChange={(e) => updateCourse(i, 'grade', e.target.value)}
+‎              >
+‎                {Object.keys(GRADE_POINTS).map(g => <option key={g} value={g}>{g}</option>)}
+‎              </select>
+‎            </div>
+‎            <button onClick={() => removeCourse(i)} className="text-red-400 p-2"><Trash2 size={18} /></button>
+‎          </div>
+‎        ))}
+‎      </div>
+‎
+‎      <button onClick={addCourse} className="w-full border-2 border-dashed border-gray-200 py-3 rounded-2xl text-gray-400 flex items-center justify-center gap-2 font-medium">
+‎        <Plus size={18} /> Add Course
+‎      </button>
+‎
+‎      <div className="bg-indigo-600 p-6 rounded-3xl text-white text-center shadow-lg">
+‎        <p className="text-indigo-200 text-sm mb-1 uppercase font-bold tracking-widest">Your Current GPA</p>
+‎        <h2 className="text-5xl font-black mb-4">{gpa || '0.00'}</h2>
+‎        <button onClick={calculate} className="bg-white text-indigo-600 w-full py-3 rounded-xl font-bold shadow-md active:scale-95 transition-transform">
+‎          Calculate Now
+‎        </button>
+‎      </div>
+‎    </div>
+‎  );
+‎};
+‎
+‎const ProfileView = ({ user, setUser }) => (
+‎  <div className="space-y-6">
+‎    <div className="flex flex-col items-center py-6">
+‎      <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4 border-4 border-white shadow-lg">
+‎        <User size={48} />
+‎      </div>
+‎      <h2 className="text-xl font-bold">{user.name}</h2>
+‎      <p className="text-gray-500 text-sm">{user.dept} • {user.level}</p>
+‎      
+‎      <div className="mt-4 flex gap-2">
+‎        <span className={`px-4 py-1 rounded-full text-xs font-bold ${user.isPremium ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+‎          {user.isPremium ? 'PREMIUM' : 'FREE'}
+‎        </span>
+‎        <span className="bg-green-100 text-green-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Verified Student</span>
+‎      </div>
+‎    </div>
+‎
+‎    <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+‎      <ProfileMenuItem icon={<User size={20} />} label="Edit Profile" />
+‎      <ProfileMenuItem icon={<Bell size={20} />} label="Notifications" />
+‎      <ProfileMenuItem 
+‎        icon={<CreditCard size={20} />} 
+‎        label="Subscription" 
+‎        onClick={() => setUser({...user, isPremium: !user.isPremium})}
+‎        trailing={user.isPremium ? "Manage" : "Upgrade"}
+‎      />
+‎      <div className="p-4 border-t border-gray-50">
+‎        <button className="w-full text-left text-red-500 font-semibold flex items-center gap-3">
+‎          Logout
+‎        </button>
+‎      </div>
+‎    </div>
+‎
+‎    <div className="text-center">
+‎      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest italic">CampusPal v1.0.4</p>
+‎    </div>
+‎  </div>
+‎);
+‎
+‎const ProfileMenuItem = ({ icon, label, trailing, onClick }) => (
+‎  <button onClick={onClick} className="w-full p-4 flex items-center justify-between border-b border-gray-50 hover:bg-gray-50 transition-colors">
+‎    <div className="flex items-center gap-3 text-slate-700 font-medium">
+‎      <span className="text-indigo-500">{icon}</span>
+‎      {label}
+‎    </div>
+‎    <div className="flex items-center gap-1 text-gray-400 text-sm">
+‎      {trailing}
+‎      <ChevronRight size={18} />
+‎    </div>
+‎  </button>
+‎);
+‎
+‎export default App;
